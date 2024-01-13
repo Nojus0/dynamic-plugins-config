@@ -1,0 +1,16 @@
+configs:
+  - id: nojus
+    plugin: discord
+    auth_token: "321"
+    channel_id: "0"
+
+  - id: local_dist
+    plugin: local
+    dir: "dist"
+
+parts:
+  - id: nojus
+    attachment: "https://cdn.com"
+
+  - id: local_dist
+    path: path.py
