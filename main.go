@@ -17,6 +17,17 @@ func main() {
 		log.Fatal(err)
 	}
 
+	type PluginFactory = func(m map[string]any) plugins.Impl
+
+	pluginFactory := map[string]PluginFactory{
+		"discord": func(m map[string]any) plugins.Impl {
+			return discord.From(m)
+		},
+		"local": func(m map[string]any) plugins.Impl {
+			return local.From(m)
+		},
+	}
+
 	var plugs []plugins.Impl
 	var plugById = make(map[string]plugins.Impl)
 
@@ -24,19 +35,16 @@ func main() {
 		pluginName := p["plugin"].(string)
 		id := p["id"].(string)
 
-		switch pluginName {
-		case "discord":
-			plug := discord.From(p)
-			plugById[id] = plug
-			plugs = append(plugs, plug)
-		case "local":
-			plug := local.From(p)
-			plugById[id] = plug
-			plugs = append(plugs, local.From(p))
-		default:
-			log.Fatalln("Unsupported plugin:", pluginName)
+		makePlug, found := pluginFactory[pluginName]
+
+		if !found {
+			log.Fatal("Unsupported plugin:", pluginName)
 		}
 
+		plug := makePlug(p)
+
+		plugById[id] = plug
+		plugs = append(plugs, plug)
 	}
 
 	for _, plug := range plugs {
